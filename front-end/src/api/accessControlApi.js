@@ -10,18 +10,18 @@ export async function fetchAccessControlInformation() {
 }
 
 export async function generateAccessControlTempCode(id) {
-    try {
-      const result = await api.put(`/api/access-control/${id}`);
-      return result.data;
-    } catch (err) {
-      return err;
-    }
+  try {
+    const result = await api.put(`/api/access-control/${id}`);
+    return result.data;
+  } catch (err) {
+    return err;
   }
+}
 
 export async function deleteAccessControlTempCode(id) {
-    try {
-        const result = await api.delete(`/api/access-control/${id}`)
-    } catch (err) {
-        return err;
-      }
+  try {
+    await api.delete(`/api/access-control/${id}`);
+  } catch (err) {
+    return err;
+  }
 }
