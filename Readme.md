@@ -2,6 +2,14 @@ DSD Feb 2025 Cohort
 
 For local development, set your .env variables and run `node runLocalDev.js`
 
+## Deployment
+
+### Quick Deployment Guide
+- **Frontend**: Deploy to Vercel (set Root Directory to `/front-end`)
+- **Backend**: Deploy to Render (set Root Directory to `/back-end`) 
+- **Database**: Set up PostgreSQL on Supabase
+
+For detailed deployment instructions, check out the [Deployment Guide](DEPLOYMENT.md).
 
 # Dwellify - Admin Panel
 
