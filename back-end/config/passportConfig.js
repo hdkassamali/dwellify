@@ -36,11 +36,15 @@ passport.serializeUser(function (user, cb) {
 });
 
 passport.deserializeUser(async function (userId, cb) {
-  const user = await AppDataSource.manager.findOneBy(admin, { id: userId });
-  if (!user) {
-    cb(new Error("Admin not in session"));
+  try {
+    const user = await AppDataSource.manager.findOneBy(admin, { id: userId });
+    if (!user) {
+      return cb(new Error("Admin not in session"));
+    }
+    return cb(null, user);
+  } catch (err) {
+    return cb(err);
   }
-  cb(null, user);
 });
 
 module.exports = passport;

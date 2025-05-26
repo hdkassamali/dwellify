@@ -166,17 +166,23 @@ If the other options don't work:
 
 ### Configuring Session Storage
 
-For proper session persistence in production, the application uses PostgreSQL to store session data. This is already configured in the code and should work automatically if you've set up the database connection correctly.
+For proper session persistence in production, the application uses PostgreSQL to store session data. You need to create the session table in your database by running a migration:
 
-The session configuration uses the following:
+1. After deploying your backend, connect to your Render shell:
+   ```
+   cd back-end
+   npm run migration:session-table
+   ```
+
+This will create the necessary session table in your Supabase database. The session configuration uses:
 
 1. The `connect-pg-simple` package to store sessions in PostgreSQL
-2. Automatic table creation with the `createTableIfMissing: true` option
-3. Session cookies configured for cross-origin use with `sameSite: 'none'` in production
+2. Session cookies configured for cross-origin use with `sameSite: 'none'` in production
 
 If you encounter session-related issues (like being logged out unexpectedly), check that:
 - Your `SESSION_SECRET_KEY` environment variable is properly set
 - The PostgreSQL connection is working correctly
+- The session table exists in your database
 - Cross-Origin Resource Sharing (CORS) is configured to allow your frontend domain
 
 ## 3. Frontend Deployment (Vercel)

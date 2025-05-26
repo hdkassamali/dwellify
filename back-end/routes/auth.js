@@ -17,13 +17,23 @@ router.post("/logout", function (req, res, next) {
 });
 
 router.post("/login", function (req, res, next) {
-  passport.authenticate("local", (err, user) => {
-    if (err) return next(err);
-    else {
-      req.logIn(user, function () {
-        return res.status(200).json({ user: user });
-      });
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      return next(err);
     }
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ message: info?.message || "Authentication failed" });
+    }
+
+    req.logIn(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+      return res.status(200).json({ user: user });
+    });
   })(req, res, next);
 });
 
