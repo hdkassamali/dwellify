@@ -9,7 +9,6 @@
     "migration:generate": "typeorm migration:generate -d ./database/data-source -o ./database/migrations/migrations",
     "migration:run": "typeorm migration:run -d ./database/data-source.js",
     "migration:revert": "typeorm migration:revert -d ./database/data-source.js",
-    "migration:session-table": "node ./database/migrations/session-table.js",
     "seed": "node ./database/seed.js"
   },
   "dependencies": {
