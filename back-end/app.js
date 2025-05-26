@@ -40,7 +40,6 @@ app.use(
     store: new pgSession({
       pool: AppDataSource.driver.pool,
       tableName: "session",
-      createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET_KEY || "your_secret_key",
     resave: false,
@@ -72,6 +71,10 @@ app.listen(4000, () => {
 });
 
 function errorHandler(err, req, res, next) {
+  if (res.headersSent) {
+    return next(err);
+  }
+
   return res
     .status(res.statusCode !== 200 ? res.statusCode : 500)
     .json({ message: err.message });
