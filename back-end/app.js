@@ -7,13 +7,16 @@ const session = require("express-session");
 const passport = require("./config/passportConfig");
 const cors = require("cors");
 
+const pgSession = require("connect-pg-simple")(session);
+const AppDataSource = require("./database/data-source");
+
 const usersRouter = require("./routes/users");
 const authRouter = require("./routes/auth");
 const leaseRouter = require("./routes/lease");
 const apartmentRouter = require("./routes/apartment");
 const tenantRouter = require("./routes/tenant");
 const complaintsRouter = require("./routes/complaints");
-const accessControlRouter = require("./routes/accessControl")
+const accessControlRouter = require("./routes/accessControl");
 
 const app = express();
 
@@ -34,12 +37,18 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use(
   session({
+    store: new pgSession({
+      pool: AppDataSource.driver.pool,
+      tableName: "session",
+      createTableIfMissing: true,
+    }),
     secret: process.env.SESSION_SECRET_KEY || "your_secret_key",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production", // Set to true if using HTTPS
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   })
 );

@@ -25,6 +25,20 @@ This guide explains how to deploy the Dwellify application:
    - Password: (the one you created)
 3. Save these details for configuring your backend
 
+### Configure Transaction Pooler for Render Compatibility
+
+Render requires IPv4 compatibility, but the default Supabase direct connection uses IPv6. To fix this:
+
+1. In your Supabase dashboard, go to **Project Settings** → **Database**
+2. In the **Connection Pooling** section, find the **Transaction pooler** information:
+   - Host: `aws-0-[region].pooler.supabase.com` 
+   - Port: `6543` (note this is different from the direct connection port)
+   - User: `postgres.[project-ref]`
+   - Database: `postgres`
+   - Pool Mode: `transaction`
+
+3. You'll need these details when configuring your Render environment variables
+
 ### Setup Database Schema
 
 You have several options for setting up your database schema:
@@ -123,16 +137,6 @@ If the other options don't work:
 
 ## 2. Backend Deployment (Render)
 
-### Updated Database Configuration
-
-I've updated your `ormconfig.js` file to better handle multiple environments. The changes include:
-
-1. Separate configurations for development and production
-2. Automatic selection based on NODE_ENV
-3. Better logging settings for each environment
-
-With these changes, you don't need to manually switch configuration between local and production. The code will automatically use the correct database based on environment variables.
-
 ### Deploy to Render
 
 1. Sign up or log in at [Render](https://render.com)
@@ -146,31 +150,52 @@ With these changes, you don't need to manually switch configuration between loca
    - **Start Command**: `npm start`
 
 5. Set environment variables:
-   - `DB_HOST`: Your Supabase host (e.g., db.eugyojuoqwneobgacput.supabase.co)
-   - `DB_PORT`: `5432`
-   - `DB_USERNAME`: `postgres`
+   - `DB_HOST`: Your Supabase Transaction pooler host (e.g., `aws-0-us-west-1.pooler.supabase.com`)
+   - `DB_PORT`: `6543` (Transaction pooler port)
+   - `DB_USERNAME`: Your Supabase Transaction pooler username (e.g., `postgres.[project-ref]`)
    - `DB_PASSWORD`: Your Supabase password
    - `DB_DATABASE`: `postgres`
    - `NODE_ENV`: `production`
-   - `SESSION_SECRET_KEY`: A secure random string
+   - `SESSION_SECRET_KEY`: A secure random string (Can use render to generate a random string for you)
    - `CORS_ORIGIN_BASE`: Your frontend URL (will be your Vercel URL)
+   - `POOL_MODE`: `transaction`
 
-6. Click **Create Web Service**
+6. Click **Deploy Web Service**
+
+> **Important**: Using the Transaction pooler is critical for compatibility with Render, which requires IPv4 connections. The default direct Supabase connection will fail with IPv6 ENETUNREACH errors.
+
+### Configuring Session Storage
+
+For proper session persistence in production, the application uses PostgreSQL to store session data. This is already configured in the code and should work automatically if you've set up the database connection correctly.
+
+The session configuration uses the following:
+
+1. The `connect-pg-simple` package to store sessions in PostgreSQL
+2. Automatic table creation with the `createTableIfMissing: true` option
+3. Session cookies configured for cross-origin use with `sameSite: 'none'` in production
+
+If you encounter session-related issues (like being logged out unexpectedly), check that:
+- Your `SESSION_SECRET_KEY` environment variable is properly set
+- The PostgreSQL connection is working correctly
+- Cross-Origin Resource Sharing (CORS) is configured to allow your frontend domain
 
 ## 3. Frontend Deployment (Vercel)
 
 ### Prepare Your Frontend Code
 
-Update your API endpoint URLs to point to your Render backend:
+Your frontend is already configured with environment files:
 
-1. Look for your API configuration file (likely in a utils or config folder)
-2. Update the base URL to your Render backend URL:
-   ```javascript
-   // Example update in your API config file
-   const API_BASE_URL = process.env.NODE_ENV === 'production' 
-     ? 'https://dwellify-backend.onrender.com'  // Your Render URL
-     : 'http://localhost:4000';
+1. `.env.local` - Used for local development:
    ```
+   VITE_API_BASE_URL=http://localhost:4000
+   ```
+
+2. `.env.production` - Used for production deployment:
+   ```
+   VITE_API_BASE_URL=https://dwellify-backend.onrender.com
+   ```
+
+Make sure your `.env.production` file has the correct Render backend URL. Update it if needed before deploying to Vercel.
 
 ### Deploy to Vercel
 
@@ -183,8 +208,7 @@ Update your API endpoint URLs to point to your Render backend:
    - **Build Command**: `npm run build` (usually default)
    - **Output Directory**: `dist` (usually default for Vite)
 
-5. Set environment variables if needed:
-   - `VITE_API_URL`: Your Render backend URL
+5. Vercel will automatically use your `.env.production` file values, but you can also set environment variables in the Vercel dashboard if needed.
    
 6. Click **Deploy**
 
